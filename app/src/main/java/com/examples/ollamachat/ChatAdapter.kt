@@ -1,4 +1,4 @@
-package com.example.ollamachat
+package com.examples.ollamachat
 
 import android.view.LayoutInflater
 import android.view.View
