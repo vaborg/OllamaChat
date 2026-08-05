@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.ollamachat'
+    namespace 'com.examples.ollamachat'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.ollamachat"
+        applicationId "com.examples.ollamachat"
         minSdk 30          // Android 11
         targetSdk 34
         versionCode 1
