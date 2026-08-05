@@ -1,4 +1,4 @@
-package com.example.ollamachat
+package com.examples.ollamachat
 
 import okhttp3.Call
 import okhttp3.Callback

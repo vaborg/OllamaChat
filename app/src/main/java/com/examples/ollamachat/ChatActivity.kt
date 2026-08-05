@@ -1,4 +1,4 @@
-package com.example.ollamachat
+package com.examples.ollamachat
 
 import android.content.Intent
 import android.os.Bundle
