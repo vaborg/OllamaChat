@@ -1,4 +1,4 @@
-package com.examples.ollamachat
+package com.example.ollamachat
 
 import okhttp3.Call
 import okhttp3.Callback
@@ -34,9 +34,9 @@ object OllamaApi {
     fun listModels(host: String, apiKey: String): List<String> {
         val req = requestBuilder(host, "/api/tags", apiKey).get().build()
         client.newCall(req).execute().use { resp ->
-            val bodyStr = resp.body?.string() ?: throw IOException("Empty response body")
-            if (!resp.isSuccessful) throw IOException(httpError(resp.code, bodyStr))
-            val models = JSONObject(bodyStr).optJSONArray("models") ?: JSONArray()
+            val body = resp.body?.string() ?: throw IOException("Empty response body")
+            if (!resp.isSuccessful) throw IOException(httpError(resp.code, body))
+            val models = JSONObject(body).optJSONArray("models") ?: JSONArray()
             val result = ArrayList<String>(models.length())
             for (i in 0 until models.length()) {
                 val o = models.getJSONObject(i)
@@ -85,15 +85,16 @@ object OllamaApi {
                 response.use { r ->
                     val body = r.body
                     if (!r.isSuccessful) {
-                        val errBody = body?.string() ?: ""
-                        onError(httpError(r.code, errBody))
+                        val err = body?.string() ?: ""
+                        onError(httpError(r.code, err))
+                        return
+                    }
+                    if (body == null) {
+                        onError("Empty response body")
                         return
                     }
                     try {
-                        val source = body?.source() ?: run {
-                            onError("Empty response body")
-                            return
-                        }
+                        val source = body.source()
                         while (!source.exhausted()) {
                             val line = source.readUtf8Line() ?: continue
                             if (line.isBlank()) continue
