@@ -85,13 +85,13 @@ object OllamaApi {
     response.use { r ->
         val body = r.body
         if (!r.isSuccessful) {
-            val errorBody = body?.string() ?: ""
+            val errorBody = body.string()
             onError(httpError(r.code, errorBody))
             return
         }
 
         try {
-            val source = body?.source() ?: run {
+            val source = body?.source() run {
                 onError("Empty response body")
                 return
             }
