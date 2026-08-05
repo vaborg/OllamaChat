@@ -34,9 +34,9 @@ object OllamaApi {
     fun listModels(host: String, apiKey: String): List<String> {
         val req = requestBuilder(host, "/api/tags", apiKey).get().build()
         client.newCall(req).execute().use { resp ->
-            val body = resp.body?.string() ?: throw IOException("Empty response body")
-			if (!resp.isSuccessful) throw IOException(httpError(resp.code, body))
-			val models = JSONObject(body).optJSONArray("models") ?: JSONArray()
+            val bodyStr = resp.body?.string() ?: throw IOException("Empty response body")
+            if (!resp.isSuccessful) throw IOException(httpError(resp.code, bodyStr))
+            val models = JSONObject(bodyStr).optJSONArray("models") ?: JSONArray()
             val result = ArrayList<String>(models.length())
             for (i in 0 until models.length()) {
                 val o = models.getJSONObject(i)
@@ -82,38 +82,36 @@ object OllamaApi {
             }
 
             override fun onResponse(call: Call, response: Response) {
-    response.use { r ->
-        val body = r.body
-        if (!r.isSuccessful) {
-            val errorBody = body.string()
-            onError(httpError(r.code, errorBody))
-            return
-        }
-
-        try {
-            val source = body?.source() run {
-                onError("Empty response body")
-                return
-            }
-
-            while (!source.exhausted()) {
-                val line = source.readUtf8Line() ?: continue
-                if (line.isBlank()) continue
-                val json = try { JSONObject(line) } catch (e: Exception) { continue }
-                if (json.has("error")) {
-                    onError(json.optString("error", "Unknown server error"))
-                    return
+                response.use { r ->
+                    val body = r.body
+                    if (!r.isSuccessful) {
+                        val errBody = body?.string() ?: ""
+                        onError(httpError(r.code, errBody))
+                        return
+                    }
+                    try {
+                        val source = body?.source() ?: run {
+                            onError("Empty response body")
+                            return
+                        }
+                        while (!source.exhausted()) {
+                            val line = source.readUtf8Line() ?: continue
+                            if (line.isBlank()) continue
+                            val json = try { JSONObject(line) } catch (e: Exception) { continue }
+                            if (json.has("error")) {
+                                onError(json.optString("error", "Unknown server error"))
+                                return
+                            }
+                            val token = json.optJSONObject("message")?.optString("content").orEmpty()
+                            if (token.isNotEmpty()) onToken(token)
+                            if (json.optBoolean("done", false)) break
+                        }
+                        onDone()
+                    } catch (e: Exception) {
+                        if (!call.isCanceled()) onError(e.message ?: "Stream error")
+                    }
                 }
-                val token = json.optJSONObject("message")?.optString("content").orEmpty()
-                if (token.isNotEmpty()) onToken(token)
-                if (json.optBoolean("done", false)) break
             }
-            onDone()
-        } catch (e: Exception) {
-            if (!call.isCanceled()) onError(e.message ?: "Stream error")
-        }
-    }
-}
         })
     }
 
