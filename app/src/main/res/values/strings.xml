@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ollama Chat</string>
+    <string name="default_host">https://ollama.com</string>
+    <string name="login_subtitle">Chat with Ollama Cloud or your own server</string>
+    <string name="hint_server">Server URL</string>
+    <string name="hint_api_key">Ollama API key (empty for local server)</string>
+    <string name="login_api_key_help">Get your API key at https://ollama.com/settings/keys — sign in, create a key and paste it above. For a local Ollama server, enter its address instead (e.g. http://192.168.1.10:11434) and leave the key empty.</string>
+    <string name="connect">Connect</string>
+    <string name="label_model">Model:</string>
+    <string name="logout">Log out</string>
+    <string name="hint_message">Type a message…</string>
+    <string name="send">Send</string>
+    <string name="stop">Stop</string>
+    <string name="error_host_required">Server URL is required</string>
+    <string name="error_connect">Connection failed: %1$s</string>
+    <string name="error_models">Could not load models: %1$s</string>
+    <string name="error_no_models">No models available on this server.</string>
+    <string name="error_no_model_selected">Pick a model first</string>
+</resources>
