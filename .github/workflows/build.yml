@@ -12,25 +12,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # AGP 8.5.2 requires JDK 17+. 17 is the version AGP is tested against.
+      # AGP 8.2.2 requires JDK 17. Gradle 8.2 also rejects JDK 21, so do
+      # not raise this without raising Gradle first.
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # Pins Gradle explicitly. Without this the runner's own Gradle (8.2)
-      # is used and AGP's version check fails. This also removes any need
-      # for a committed gradle-wrapper.jar.
-      - name: Set up Gradle 8.7
+      # Diagnostic. If the build still fails on a version check, this block
+      # says exactly which Gradle is in play and whether a wrapper exists.
+      - name: Report toolchain
+        run: |
+          echo "--- java ---"
+          java -version
+          echo "--- system gradle ---"
+          which gradle && gradle --version || echo "no system gradle"
+          echo "--- wrapper present? ---"
+          ls -la gradlew gradle/wrapper/ 2>&1 || true
+          echo "--- distributionUrl ---"
+          cat gradle/wrapper/gradle-wrapper.properties 2>&1 || true
+
+      # Guards against a stale wrapper in the repo overriding everything.
+      # ./gradlew ignores any pinned Gradle and obeys this line instead.
+      - name: Force wrapper to Gradle 8.7
+        run: |
+          if [ -f gradle/wrapper/gradle-wrapper.properties ]; then
+            sed -i -E 's|gradle-[0-9.]+-(bin\|all)\.zip|gradle-8.7-bin.zip|' \
+              gradle/wrapper/gradle-wrapper.properties
+            cat gradle/wrapper/gradle-wrapper.properties
+          fi
+
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Show toolchain
-        run: gradle --version
-
-      # ANDROID_HOME is preset on ubuntu-latest, so no local.properties needed.
+      # `gradle`, not `./gradlew`. The wrapper would re-resolve its own
+      # distribution and discard the pinned version above.
       - name: Assemble debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
